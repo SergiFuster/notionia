@@ -1,7 +1,7 @@
 # Notionia
 
 <p align="center">
-  <img src="images/logo.png" alt="Logo de Notionia" width="150"/>
+  <img src="images/logo.png" alt="Logo de Notionia" width="100%"/>
 </p>
 
 ## Flujo de trabajo
