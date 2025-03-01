@@ -132,67 +132,18 @@ class NotionAgent:
         except Exception as e:
             return f"Error creating database: {str(e)}"
     
-    def update_page(self, page_id: str, title: str = None, content: str = None) -> str:
-        """Update an existing Notion page with new title and/or content"""
-        try:
-            # Actualizar el título si se proporciona
-            if title:
-                notion.pages.update(
-                    page_id=page_id,
-                    properties={
-                        "title": {
-                            "title": [
-                                {
-                                    "text": {
-                                        "content": title
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                )
-            
-            # Actualizar el contenido si se proporciona
-            if content:
-                notion.blocks.children.append(
-                    block_id=page_id,
-                    children=[
-                        {
-                            "object": "block",
-                            "type": "paragraph",
-                            "paragraph": {
-                                "rich_text": [
-                                    {
-                                        "type": "text",
-                                        "text": {
-                                            "content": content
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                )
-            
-            return f"Page updated successfully: {page_id}"
-        except Exception as e:
-            return f"Error updating page: {str(e)}"
-    
-    def get_page(self, page_id: str) -> str:
-        """Get information about a specific Notion page"""
+    def get_page(self, page_id: str = os.getenv("PARENT_PAGE_ID")) -> str:
+        """Get information about a specific Notion page
+
+        Args:
+            page_id: str, optional
+                The id of the page to retrieve. Defaults to the page with id provided by the env variable PARENT_PAGE_ID.
+        """
         try:
             page = notion.pages.retrieve(page_id=page_id)
-            return f"Page retrieved: {page['id']}, Title: {page['properties']['title']['title'][0]['text']['content'] if page['properties'].get('title') and page['properties']['title'].get('title') and len(page['properties']['title']['title']) > 0 else 'No title'}"
+            return page
         except Exception as e:
             return f"Error retrieving page: {str(e)}"
-    
-    def get_database(self, database_id: str) -> str:
-        """Get information about a specific Notion database"""
-        try:
-            database = notion.databases.retrieve(database_id=database_id)
-            return f"Database retrieved: {database['id']}, Title: {database['title'][0]['text']['content'] if database.get('title') and len(database['title']) > 0 else 'No title'}"
-        except Exception as e:
-            return f"Error retrieving database: {str(e)}"
     
     def invoke(self, prompt: str) -> str:
         """Invoca el agente con un prompt y devuelve la respuesta"""
@@ -204,4 +155,4 @@ class NotionAgent:
 # Example usage
 if __name__ == "__main__":
     agent = NotionAgent()
-    print(agent.invoke("Creame 2 páginas anidadas, la primera tiene que ser para tareas y la segundo para una tarea específica por ejemplo 'programación"))
+    print(agent.invoke("Dame información sobre todas las páginas disponibles"))

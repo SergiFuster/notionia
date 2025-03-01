@@ -10,4 +10,8 @@ dependencies = [
     "langchain-openai>=0.3.7",
     "langgraph>=0.3.1",
     "notion-client>=2.3.0",
+    "flask>=2.3.3",
+    "flask-cors>=4.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.1",
 ]

@@ -9,5 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-#Secrets
+# Secrets
 .env
+
+# NodeJS
+node_modules
