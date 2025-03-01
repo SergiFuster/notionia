@@ -151,4 +151,4 @@ Las contribuciones son bienvenidas. Por favor, sigue estos pasos:
 
 ## Licencia
 
-Este proyecto está licenciado bajo [tu licencia] - ver el archivo LICENSE para más detalles.
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
