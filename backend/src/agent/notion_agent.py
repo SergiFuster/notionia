@@ -1,15 +1,16 @@
-import os
-import yaml
-from pathlib import Path
-from dotenv import load_dotenv
-from notion_client import Client
-from typing import TypedDict, Annotated, List, Dict, Callable
 import inspect
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage, AnyMessage
+import os
+from pathlib import Path
+from typing import Annotated, Callable, Dict, List, TypedDict
+
+import yaml
+from dotenv import load_dotenv
+from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import create_react_agent
+from notion_client import Client
 
 # Load environment variables
 load_dotenv()
@@ -17,13 +18,14 @@ load_dotenv()
 # Initialize Notion Client
 notion = Client(auth=os.getenv("NOTION_TOKEN"))
 
+
 # Load system prompt from YAML file
 def load_system_prompt() -> SystemMessage:
     current_dir = Path(__file__).parent
     system_prompt_path = current_dir / "system_prompt.yaml"
-    
+
     try:
-        with open(system_prompt_path, 'r', encoding='utf-8') as file:
+        with open(system_prompt_path, "r", encoding="utf-8") as file:
             yaml_content = yaml.safe_load(file)
             content = yaml_content.get("system_prompt", "")
             return SystemMessage(content=content)
@@ -31,9 +33,11 @@ def load_system_prompt() -> SystemMessage:
         print(f"Error loading system prompt: {str(e)}")
         return ""
 
+
 class AgentState(TypedDict):
-    messages : Annotated[List[AnyMessage], add_messages]
-    
+    messages: Annotated[List[AnyMessage], add_messages]
+
+
 class NotionAgent:
     def __init__(self, llm=ChatOpenAI(model="gpt-4o")):
         self.llm = llm
@@ -45,38 +49,56 @@ class NotionAgent:
         self.tools = self._create_tools()
         # Crear el agente ReAct con el system prompt
         self.compiled_agent = create_react_agent(
-            llm, 
-            tools=self.tools,
-            prompt=self.system_prompt
+            llm, tools=self.tools, prompt=self.system_prompt
         )
-    
+
     def _get_class_methods(self) -> Dict[str, Callable]:
         """Obtiene todos los métodos de la clase excepto los métodos especiales y privados"""
         methods = {}
         for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
-            # Excluir métodos especiales (como __init__) y métodos privados (que comienzan con _)
-            if not name.startswith('_'):
+            if not name.startswith("_"):
                 methods[name] = method
         return methods
-    
+
     def _create_tools(self):
         """Crea herramientas a partir de los métodos de la clase"""
         tools = []
         for name, method in self.class_methods.items():
             tools.append(tool(description=method.__doc__ or f"Tool for {name}")(method))
         return tools
-    def add_content_block_to_page(self, page_id: str, content: dict):
-        notion.blocks.children.append(
-            block_id=page_id,
-            **content
-        )
+
+    def add_block(self, *, page_id: str | None = None, blocks: List[dict]) -> str:
+        """
+        Agrega un bloque de contenido a una página Notion
+
+        Args:
+            blocks (List[dict]): Lista de bloques de contenido
+            page_id (str | None, optional): Id de la página Notion. Defaults to None.
+        """
+        page_id = page_id or os.getenv("PARENT_PAGE_ID")
+        return notion.blocks.children.append(block_id=page_id, children=blocks)
+
+    def get_block(self, *, block_id: str | None = None) -> str:
+        """
+        Obtiene el contenido de un bloque de contenido de Notion.
+
+        Este contenido incluye información de los hijos del bloque y sus ids.
+
+        Args:
+            block_id (str): Id del bloque de contenido de Notion
+
+        Returns:
+            str: Contenido del bloque de contenido
+        """
+        block_id = block_id or os.getenv("PARENT_PAGE_ID")
+        return notion.blocks.children.list(block_id=block_id)
+
     def create_page(
         self,
         *,
-        page_id : str | None = None,
-        title : str,
-        description : str,
-        ) -> str:
+        page_id: str | None = None,
+        title: str,
+    ) -> str:
         """
         Create a new Notion page with the specified parent and title
 
@@ -87,71 +109,73 @@ class NotionAgent:
             page with id provided by the env variable PARENT_PAGE_ID.
         title: str
             The title of the new page
-        
+
         """
-        try:            
+        try:
             # Crear la página
             page = notion.pages.create(
                 **{
-                    "parent" : {"type": "page_id", "page_id": page_id or os.getenv("PARENT_PAGE_ID")},
-                    "properties" : {
-                        "title": [
-                            {
-                                "type": "text",
-                                "text": {
-                                    "content": title
-                                }
-                            }
-                        ]
-                    }
+                    "parent": {
+                        "type": "page_id",
+                        "page_id": page_id or os.getenv("PARENT_PAGE_ID"),
+                    },
+                    "properties": {
+                        "title": [{"type": "text", "text": {"content": title}}]
+                    },
                 }
             )
-            
+
             return f"Page created successfully: {page['id']}"
         except Exception as e:
             return f"Error creating page: {str(e)}"
-    
-    def create_database(self, title: str, properties: dict = None) -> str:
-        """Create a new Notion database with the specified title and optional custom properties"""
+
+    def create_database(
+        self,
+        *,
+        page_id: str | None = None,
+        title: str,
+        properties: dict,
+    ) -> str:
+        """Create a new Notion database with the specified title and optional custom properties
+
+        Args:
+        page_id (str | None, optional): The id of the page where the new database will be created as a child.
+            If not provided, the new database will be created as a child of the
+            page with id provided by the env variable PARENT_PAGE_ID.
+        title (str): The title of the new database
+        properties (dict): A dictionary of custom properties to be added to the database
+        """
         try:
-            # Propiedades por defecto si no se proporcionan
-            default_properties = {
-                "Name": {"title": {}},
-                "Description": {"rich_text": {}}
-            }
-            
-            # Usar propiedades personalizadas si se proporcionan
-            db_properties = properties if properties else default_properties
-            
             database = notion.databases.create(
-                parent={"type": "page_id", "page_id": os.getenv("PARENT_PAGE_ID")},
-                title=[{"type": "text", "text": {"content": title}}],
-                properties=db_properties
+                **{
+                    "parent": {
+                        "type": "page_id",
+                        "page_id": page_id or os.getenv("PARENT_PAGE_ID"),
+                    },
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {"content": title, "link": None},
+                        }
+                    ],
+                    "properties": properties,
+                }
             )
+
             return f"Database created successfully: {database['id']}"
         except Exception as e:
             return f"Error creating database: {str(e)}"
-    
-    def get_page(self, page_id: str = os.getenv("PARENT_PAGE_ID")) -> str:
-        """Get information about a specific Notion page
 
-        Args:
-            page_id: str, optional
-                The id of the page to retrieve. Defaults to the page with id provided by the env variable PARENT_PAGE_ID.
-        """
-        try:
-            page = notion.pages.retrieve(page_id=page_id)
-            return page
-        except Exception as e:
-            return f"Error retrieving page: {str(e)}"
-    
     def invoke(self, prompt: str) -> str:
         """Invoca el agente con un prompt y devuelve la respuesta"""
-        
-        result = self.compiled_agent.invoke({"messages": [HumanMessage(content=prompt)]}, {"recursion_limit" : 25})
+
+        result = self.compiled_agent.invoke(
+            {"messages": [HumanMessage(content=prompt)]}, {"recursion_limit": 25}
+        )
         # Extraer el contenido del último mensaje
         return result["messages"][-1].content
-    
+
+
 # Example usage
 if __name__ == "__main__":
     agent = NotionAgent()
