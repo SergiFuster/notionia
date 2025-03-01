@@ -21,10 +21,6 @@ Algunas capturas de pantalla relacionadas con el backend:
 
 El backend está construido con FastAPI y se comunica con la API de Notion y OpenAI para proporcionar funcionalidades de gestión de espacios de trabajo de Notion mediante lenguaje natural.
 
-<p align="center">
-  <img src="../images/architecture.svg" alt="Arquitectura de Notionia" width="600"/>
-</p>
-
 ## Licencia
 
 Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](../LICENSE) para más detalles.
