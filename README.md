@@ -4,37 +4,31 @@
   <img src="images/logo.svg" alt="Logo de Notionia" width="150"/>
 </p>
 
-## Capturas de pantalla
+## Flujo de trabajo
 
 <details open>
   <summary><strong>Todas las capturas de pantalla</strong></summary>
 
-  ### 1. Vista general
   <p align="center">
     <img src="images/screenshot1.png" alt="Captura 1 - Vista general" width="800"/>
   </p>
 
-  ### 2. Creación de páginas
   <p align="center">
     <img src="images/screenshot2.png" alt="Captura 2 - Creación de páginas" width="800"/>
   </p>
 
-  ### 3. Gestión de bases de datos
   <p align="center">
     <img src="images/screenshot3.png" alt="Captura 3 - Gestión de bases de datos" width="800"/>
   </p>
 
-  ### 4. Navegación contextual
   <p align="center">
     <img src="images/screenshot4.png" alt="Captura 4 - Navegación contextual" width="800"/>
   </p>
 
-  ### 5. Exploración recursiva
   <p align="center">
     <img src="images/screenshot5.png" alt="Captura 5 - Exploración recursiva" width="800"/>
   </p>
 
-  ### 6. Interfaz conversacional
   <p align="center">
     <img src="images/screenshot6.png" alt="Captura 6 - Interfaz conversacional" width="800"/>
   </p>
