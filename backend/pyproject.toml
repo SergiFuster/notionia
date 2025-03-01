@@ -1,0 +1,13 @@
+[project]
+name = "notionia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.10",
+    "langchain-core>=0.3.40",
+    "langchain-openai>=0.3.7",
+    "langgraph>=0.3.1",
+    "notion-client>=2.3.0",
+]
